@@ -9,11 +9,11 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Trash2, Plus, Copy, Filter, ChevronUp, ChevronDown, Edit3, Info } from "lucide-react"
+import { Trash2, Plus, Copy, Filter, ChevronUp, ChevronDown, Edit3, Info, Database } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Confetti } from "@/components/confetti"
 import { AddDataModal } from "@/components/add-data-modal"
-import { useQuery } from "convex/react"
+import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { cn } from "@/lib/utils"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -97,6 +97,7 @@ export default function RingsideOracle() {
   const [selectedStatus, setSelectedStatus] = useState<string>("All")
   const [generatedPredictions, setGeneratedPredictions] = useState<string>("")
   const [editingPredictions, setEditingPredictions] = useState<boolean>(false)
+  const [isSeeding, setIsSeeding] = useState<boolean>(false)
 
   const [showConfetti, setShowConfetti] = useState<boolean>(true)
   const [showCopyPopup, setShowCopyPopup] = useState<boolean>(false)
@@ -106,7 +107,7 @@ export default function RingsideOracle() {
   const [currentCopyMessage, setCopyMessage] = useState<string>("")
   const [confettiVisible, setConfettiVisible] = useState<boolean>(false)
 
-  // Convex queries
+  // Convex queries and mutations
   const promotions = useQuery(api.promotions.list) || []
   const brands =
     useQuery(api.brands.listByPromotion, selectedPromotion ? { promotionId: selectedPromotion._id } : "skip") || []
@@ -119,6 +120,24 @@ export default function RingsideOracle() {
   const championships =
     useQuery(api.championships.listByPromotion, selectedPromotion ? { promotionId: selectedPromotion._id } : "skip") ||
     []
+
+  // Seed data mutation
+  const seedData = useMutation(api.seedData.seedInitialData)
+
+  // Handle seeding
+  const handleSeedData = async () => {
+    setIsSeeding(true)
+    try {
+      const result = await seedData({})
+      console.log("Seed result:", result)
+      alert("Database seeded successfully! 🎉")
+    } catch (error) {
+      console.error("Error seeding data:", error)
+      alert("Error seeding data. Check console for details.")
+    } finally {
+      setIsSeeding(false)
+    }
+  }
 
   // Pro wrestling GIFs
   const wrestlingGifs = [
@@ -699,7 +718,7 @@ export default function RingsideOracle() {
           </div>
         </div>
 
-        {/* Show message if no promotions exist */}
+        {/* Show seed button if no promotions exist */}
         {promotions.length === 0 && (
           <div className="text-center mb-8">
             <Card className="max-w-md mx-auto">
@@ -708,16 +727,12 @@ export default function RingsideOracle() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
-                  No promotions found in the database. You can add some sample data or import your existing data.
+                  No promotions found in the database. Click below to seed the database with comprehensive 2025
+                  wrestling data including WWE, AEW, NJPW, TNA, STARDOM, and GCW!
                 </p>
-                <Button
-                  onClick={() => {
-                    // This would trigger seeding - you can implement this later
-                    console.log("Seed data functionality would go here")
-                  }}
-                  className="w-full"
-                >
-                  Add Sample Data
+                <Button onClick={handleSeedData} disabled={isSeeding} className="w-full">
+                  <Database className="w-4 h-4 mr-2" />
+                  {isSeeding ? "Seeding Database..." : "Seed Wrestling Database 🎯"}
                 </Button>
               </CardContent>
             </Card>

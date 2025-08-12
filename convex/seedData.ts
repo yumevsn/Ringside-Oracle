@@ -492,7 +492,7 @@ export const seedInitialData = mutation({
         default_participants: 30,
         is_single_winner: true,
         is_team_based: false,
-        gender_filter: "Male",
+        gender_filter: "Male" as const,
       },
       {
         promotion_id: wweId,
@@ -500,7 +500,7 @@ export const seedInitialData = mutation({
         default_participants: 30,
         is_single_winner: true,
         is_team_based: false,
-        gender_filter: "Female",
+        gender_filter: "Female" as const,
       },
       {
         promotion_id: wweId,
@@ -508,7 +508,7 @@ export const seedInitialData = mutation({
         default_participants: 6,
         is_single_winner: true,
         is_team_based: false,
-        gender_filter: "Male",
+        gender_filter: "Male" as const,
       },
       {
         promotion_id: wweId,
@@ -516,7 +516,7 @@ export const seedInitialData = mutation({
         default_participants: 6,
         is_single_winner: true,
         is_team_based: false,
-        gender_filter: "Female",
+        gender_filter: "Female" as const,
       },
       {
         promotion_id: wweId,
@@ -533,7 +533,7 @@ export const seedInitialData = mutation({
         default_participants: 8,
         is_single_winner: true,
         is_team_based: false,
-        gender_filter: "Male",
+        gender_filter: "Male" as const,
       },
       {
         promotion_id: wweId,
@@ -541,7 +541,7 @@ export const seedInitialData = mutation({
         default_participants: 8,
         is_single_winner: true,
         is_team_based: false,
-        gender_filter: "Female",
+        gender_filter: "Female" as const,
       },
       {
         promotion_id: wweId,
@@ -623,7 +623,7 @@ export const seedInitialData = mutation({
         default_participants: 21,
         is_single_winner: true,
         is_team_based: false,
-        gender_filter: "Male",
+        gender_filter: "Male" as const,
       },
       {
         promotion_id: aewId,
@@ -631,7 +631,7 @@ export const seedInitialData = mutation({
         default_participants: 21,
         is_single_winner: true,
         is_team_based: false,
-        gender_filter: "Female",
+        gender_filter: "Female" as const,
       },
       {
         promotion_id: aewId,

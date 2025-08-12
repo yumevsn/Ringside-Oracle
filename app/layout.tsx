@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
-import { ConvexClientProvider } from "@/lib/convex-provider"
+import { ConvexClientProvider } from "./convex-provider"
 
 export const metadata: Metadata = {
   title: "Ringside Oracle",

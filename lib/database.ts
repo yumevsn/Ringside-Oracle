@@ -1,4 +1,4 @@
-// Database utility functions for Ringside Oracle - Convex Version
+// Database utility functions for Ringside Oracle using Convex
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -55,114 +55,103 @@ export interface Championship {
   is_active: boolean
 }
 
-// Custom hooks for data fetching
+// Custom hooks for fetching data
 export const usePromotions = () => {
-  return useQuery(api.promotions.list) || []
+  return useQuery(api.wrestling.getPromotions)
 }
 
-export const useBrandsByPromotion = (promotionId: Id<"promotions"> | null) => {
-  return useQuery(api.brands.listByPromotion, promotionId ? { promotionId } : "skip") || []
+export const useBrandsByPromotion = (promotionId: Id<"promotions"> | undefined) => {
+  return useQuery(api.wrestling.getBrandsByPromotion, promotionId ? { promotionId } : "skip")
 }
 
-export const useWrestlersByPromotion = (promotionId: Id<"promotions"> | null) => {
-  return useQuery(api.wrestlers.listByPromotion, promotionId ? { promotionId } : "skip") || []
+export const useWrestlersByPromotion = (promotionId: Id<"promotions"> | undefined) => {
+  return useQuery(api.wrestling.getWrestlersByPromotion, promotionId ? { promotionId } : "skip")
 }
 
-export const useEventsByPromotion = (promotionId: Id<"promotions"> | null) => {
-  return useQuery(api.events.listByPromotion, promotionId ? { promotionId } : "skip") || []
+export const useEventsByPromotion = (promotionId: Id<"promotions"> | undefined) => {
+  return useQuery(api.wrestling.getEventsByPromotion, promotionId ? { promotionId } : "skip")
 }
 
-export const useMatchTypesByPromotion = (promotionId: Id<"promotions"> | null) => {
-  return useQuery(api.matchTypes.listByPromotion, promotionId ? { promotionId } : "skip") || []
+export const useMatchTypesByPromotion = (promotionId: Id<"promotions"> | undefined) => {
+  return useQuery(api.wrestling.getMatchTypesByPromotion, promotionId ? { promotionId } : "skip")
 }
 
-export const useChampionshipsByPromotion = (promotionId: Id<"promotions"> | null) => {
-  return useQuery(api.championships.listByPromotion, promotionId ? { promotionId } : "skip") || []
+export const useChampionshipsByPromotion = (promotionId: Id<"promotions"> | undefined) => {
+  return useQuery(api.wrestling.getChampionshipsByPromotion, promotionId ? { promotionId } : "skip")
 }
 
-// Mutation hooks for adding data
+// Mutation hooks for user contributions
 export const useAddPromotion = () => {
-  return useMutation(api.promotions.create)
-}
-
-export const useAddBrand = () => {
-  return useMutation(api.brands.create)
-}
-
-export const useAddWrestler = () => {
-  return useMutation(api.wrestlers.create)
+  return useMutation(api.wrestling.addPromotionMutation)
 }
 
 export const useAddEvent = () => {
-  return useMutation(api.events.create)
+  return useMutation(api.wrestling.addEventMutation)
+}
+
+export const useAddWrestler = () => {
+  return useMutation(api.wrestling.addWrestlerMutation)
+}
+
+export const useAddBrand = () => {
+  return useMutation(api.wrestling.addBrandMutation)
 }
 
 export const useAddMatchType = () => {
-  return useMutation(api.matchTypes.create)
+  return useMutation(api.wrestling.addMatchTypeMutation)
 }
 
 export const useAddChampionship = () => {
-  return useMutation(api.championships.create)
+  return useMutation(api.wrestling.addChampionshipMutation)
 }
 
-// Legacy functions for compatibility (these will be replaced with hooks in components)
+// Legacy function wrappers for compatibility (these will return promises)
 export const fetchPromotions = async (): Promise<Promotion[]> => {
-  // This is now handled by usePromotions hook
-  return []
+  // This is a compatibility wrapper - in practice you should use the hooks above
+  throw new Error("Use usePromotions hook instead")
 }
 
-export const fetchBrandsByPromotion = async (promotionId: any): Promise<Brand[]> => {
-  // This is now handled by useBrandsByPromotion hook
-  return []
+export const fetchBrandsByPromotion = async (promotionId: string): Promise<Brand[]> => {
+  throw new Error("Use useBrandsByPromotion hook instead")
 }
 
-export const fetchWrestlersByPromotion = async (promotionId: any): Promise<Wrestler[]> => {
-  // This is now handled by useWrestlersByPromotion hook
-  return []
+export const fetchWrestlersByPromotion = async (promotionId: string): Promise<Wrestler[]> => {
+  throw new Error("Use useWrestlersByPromotion hook instead")
 }
 
-export const fetchEventsByPromotion = async (promotionId: any): Promise<Event[]> => {
-  // This is now handled by useEventsByPromotion hook
-  return []
+export const fetchEventsByPromotion = async (promotionId: string): Promise<Event[]> => {
+  throw new Error("Use useEventsByPromotion hook instead")
 }
 
-export const fetchMatchTypesByPromotion = async (promotionId: any): Promise<MatchType[]> => {
-  // This is now handled by useMatchTypesByPromotion hook
-  return []
+export const fetchMatchTypesByPromotion = async (promotionId: string): Promise<MatchType[]> => {
+  throw new Error("Use useMatchTypesByPromotion hook instead")
 }
 
-export const fetchChampionshipsByPromotion = async (promotionId: any): Promise<Championship[]> => {
-  // This is now handled by useChampionshipsByPromotion hook
-  return []
+export const fetchChampionshipsByPromotion = async (promotionId: string): Promise<Championship[]> => {
+  throw new Error("Use useChampionshipsByPromotion hook instead")
 }
 
-// User contribution functions (now return promises for mutations)
+// User contribution functions (legacy wrappers)
 export const addPromotion = async (promotion: Omit<Promotion, "_id">): Promise<Promotion | null> => {
-  // This is now handled by useAddPromotion hook
-  return null
+  throw new Error("Use useAddPromotion hook instead")
 }
 
 export const addEvent = async (event: Omit<Event, "_id">): Promise<Event | null> => {
-  // This is now handled by useAddEvent hook
-  return null
+  throw new Error("Use useAddEvent hook instead")
 }
 
 export const addWrestler = async (wrestler: Omit<Wrestler, "_id" | "brand_name">): Promise<Wrestler | null> => {
-  // This is now handled by useAddWrestler hook
-  return null
+  throw new Error("Use useAddWrestler hook instead")
 }
 
 export const addBrand = async (brand: Omit<Brand, "_id">): Promise<Brand | null> => {
-  // This is now handled by useAddBrand hook
-  return null
+  throw new Error("Use useAddBrand hook instead")
 }
 
 export const addMatchType = async (matchType: Omit<MatchType, "_id">): Promise<MatchType | null> => {
-  // This is now handled by useAddMatchType hook
-  return null
+  throw new Error("Use useAddMatchType hook instead")
 }
 
 export const addChampionship = async (championship: Omit<Championship, "_id">): Promise<Championship | null> => {
-  // This is now handled by useAddChampionship hook
-  return null
+  throw new Error("Use useAddChampionship hook instead")
 }

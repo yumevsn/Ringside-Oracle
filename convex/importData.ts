@@ -1,40 +1,56 @@
-import { defineSchema, defineTable } from "convex/server"
+import { mutation } from "./_generated/server"
 import { v } from "convex/values"
 
-export default defineSchema({
-  promotions: defineTable({
+export const addPromotion = mutation({
+  args: {
     name: v.string(),
     country_code: v.string(),
     country_emoji: v.string(),
     primary_color: v.string(),
     secondary_color: v.string(),
     accent_color: v.string(),
-  }).index("by_name", ["name"]),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("promotions", args)
+  },
+})
 
-  brands: defineTable({
+export const addBrand = mutation({
+  args: {
     promotion_id: v.id("promotions"),
     name: v.string(),
     color: v.string(),
-  }).index("by_promotion", ["promotion_id"]),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("brands", args)
+  },
+})
 
-  wrestlers: defineTable({
+export const addWrestler = mutation({
+  args: {
     name: v.string(),
     brand_id: v.id("brands"),
     status: v.union(v.literal("Active"), v.literal("Part-Time"), v.literal("Legend"), v.literal("Inactive")),
     gender: v.union(v.literal("Male"), v.literal("Female")),
-  })
-    .index("by_brand", ["brand_id"])
-    .index("by_status", ["status"])
-    .index("by_gender", ["gender"])
-    .index("by_name", ["name"]),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("wrestlers", args)
+  },
+})
 
-  events: defineTable({
+export const addEvent = mutation({
+  args: {
     promotion_id: v.id("promotions"),
     name: v.string(),
     is_ppv: v.boolean(),
-  }).index("by_promotion", ["promotion_id"]),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("events", args)
+  },
+})
 
-  match_types: defineTable({
+export const addMatchType = mutation({
+  args: {
     promotion_id: v.id("promotions"),
     name: v.string(),
     default_participants: v.number(),
@@ -43,13 +59,19 @@ export default defineSchema({
     teams_count: v.optional(v.number()),
     players_per_team: v.optional(v.number()),
     gender_filter: v.optional(v.union(v.literal("Male"), v.literal("Female"))),
-  }).index("by_promotion", ["promotion_id"]),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("match_types", args)
+  },
+})
 
-  championships: defineTable({
+export const addChampionship = mutation({
+  args: {
     promotion_id: v.id("promotions"),
     name: v.string(),
     is_active: v.boolean(),
-  })
-    .index("by_promotion", ["promotion_id"])
-    .index("by_active", ["is_active"]),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("championships", args)
+  },
 })

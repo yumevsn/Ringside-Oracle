@@ -19,6 +19,7 @@ import {
   type Promotion,
   type Brand,
 } from "@/lib/database"
+import type { Id } from "@/convex/_generated/dataModel"
 
 interface AddDataModalProps {
   type: "promotion" | "event" | "wrestler" | "brand" | "matchType" | "championship"
@@ -33,7 +34,7 @@ export function AddDataModal({ type, promotions, brands, selectedPromotion, onDa
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<any>({})
 
-  // Convex mutations
+  // Convex mutation hooks
   const addPromotion = useAddPromotion()
   const addEvent = useAddEvent()
   const addWrestler = useAddWrestler()
@@ -73,7 +74,7 @@ export function AddDataModal({ type, promotions, brands, selectedPromotion, onDa
           if (!formData.brand_id) return
           result = await addWrestler({
             name: formData.name,
-            brand_id: formData.brand_id,
+            brand_id: formData.brand_id as Id<"brands">,
             status: formData.status || "Active",
             gender: formData.gender || "Male",
           })
@@ -124,6 +125,7 @@ export function AddDataModal({ type, promotions, brands, selectedPromotion, onDa
     }
   }
 
+  // Rest of the component remains the same...
   const getTitle = () => {
     switch (type) {
       case "promotion":
@@ -217,7 +219,7 @@ export function AddDataModal({ type, promotions, brands, selectedPromotion, onDa
                   <SelectValue placeholder="Select brand" />
                 </SelectTrigger>
                 <SelectContent>
-                  {brands.map((brand) => (
+                  {brands?.map((brand) => (
                     <SelectItem key={brand._id} value={brand._id}>
                       {brand.name}
                     </SelectItem>

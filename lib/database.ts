@@ -11,6 +11,7 @@ export interface Promotion {
   primary_color: string
   secondary_color: string
   accent_color: string
+  logo_url?: string
 }
 
 export interface Brand {
@@ -18,6 +19,7 @@ export interface Brand {
   promotion_id: Id<"promotions">
   name: string
   color: string
+  logo_url?: string
 }
 
 export interface Wrestler {
@@ -26,6 +28,7 @@ export interface Wrestler {
   brand_id: Id<"brands">
   status: "Active" | "Part-Time" | "Legend" | "Inactive"
   gender: "Male" | "Female"
+  image_url?: string
   brand_name?: string
 }
 
@@ -34,6 +37,7 @@ export interface Event {
   promotion_id: Id<"promotions">
   name: string
   is_ppv: boolean
+  logo_url?: string
 }
 
 export interface MatchType {
@@ -53,6 +57,7 @@ export interface Championship {
   promotion_id: Id<"promotions">
   name: string
   is_active: boolean
+  belt_image_url?: string
 }
 
 // Custom hooks for fetching data

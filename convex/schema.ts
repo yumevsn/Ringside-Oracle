@@ -9,12 +9,14 @@ export default defineSchema({
     primary_color: v.string(),
     secondary_color: v.string(),
     accent_color: v.string(),
+    logo_url: v.optional(v.string()),
   }).index("by_name", ["name"]),
 
   brands: defineTable({
     promotion_id: v.id("promotions"),
     name: v.string(),
     color: v.string(),
+    logo_url: v.optional(v.string()),
   }).index("by_promotion", ["promotion_id"]),
 
   wrestlers: defineTable({
@@ -22,6 +24,7 @@ export default defineSchema({
     brand_id: v.id("brands"),
     status: v.union(v.literal("Active"), v.literal("Part-Time"), v.literal("Legend"), v.literal("Inactive")),
     gender: v.union(v.literal("Male"), v.literal("Female")),
+    image_url: v.optional(v.string()),
   })
     .index("by_brand", ["brand_id"])
     .index("by_status", ["status"])
@@ -32,6 +35,7 @@ export default defineSchema({
     promotion_id: v.id("promotions"),
     name: v.string(),
     is_ppv: v.boolean(),
+    logo_url: v.optional(v.string()),
   }).index("by_promotion", ["promotion_id"]),
 
   match_types: defineTable({
@@ -49,6 +53,7 @@ export default defineSchema({
     promotion_id: v.id("promotions"),
     name: v.string(),
     is_active: v.boolean(),
+    belt_image_url: v.optional(v.string()),
   })
     .index("by_promotion", ["promotion_id"])
     .index("by_active", ["is_active"]),

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -93,7 +93,6 @@ export default function RingsideOracle() {
   const [useCustomEvent, setUseCustomEvent] = useState<boolean>(false)
   const [editingEventName, setEditingEventName] = useState<boolean>(false)
   const [matches, setMatches] = useState<Match[]>([])
-  const [filteredWrestlers, setFilteredWrestlers] = useState<Wrestler[]>([])
   const [selectedBrand, setSelectedBrand] = useState<string>("All")
   const [selectedStatus, setSelectedStatus] = useState<string>("All")
   const [generatedPredictions, setGeneratedPredictions] = useState<string>("")
@@ -123,16 +122,16 @@ export default function RingsideOracle() {
 
   // Pro wrestling GIFs
   const wrestlingGifs = [
-    "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif", // Stone Cold Stunner
-    "https://media.giphy.com/media/xT1XGESDlxj0GwoDRe/giphy.gif", // Rock Bottom
-    "https://media.giphy.com/media/l2JhpjWPccQhsAMfu/giphy.gif", // Spear
-    "https://media.giphy.com/media/3o6Zt6KHxJTbXCnSvu/giphy.gif", // RKO
-    "https://media.giphy.com/media/xT1XGU1AHz9Fe8tmp2/giphy.gif", // Undertaker
-    "https://media.giphy.com/media/l0HlvtIPzPdt2usKs/giphy.gif", // John Cena
-    "https://media.giphy.com/media/3o7TKF1fSIs1R19B8k/giphy.gif", // Stone Cold Beer
-    "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif", // Attitude Adjustment
-    "https://media.giphy.com/media/xT1XGU1AHz9Fe8tmp2/giphy.gif", // Tombstone Piledriver
-    "https://media.giphy.com/media/l2JhpjWPccQhsAMfu/giphy.gif", // Goldberg Spear
+    "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif",
+    "https://media.giphy.com/media/xT1XGESDlxj0GwoDRe/giphy.gif",
+    "https://media.giphy.com/media/l2JhpjWPccQhsAMfu/giphy.gif",
+    "https://media.giphy.com/media/3o6Zt6KHxJTbXCnSvu/giphy.gif",
+    "https://media.giphy.com/media/xT1XGU1AHz9Fe8tmp2/giphy.gif",
+    "https://media.giphy.com/media/l0HlvtIPzPdt2usKs/giphy.gif",
+    "https://media.giphy.com/media/3o7TKF1fSIs1R19B8k/giphy.gif",
+    "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif",
+    "https://media.giphy.com/media/xT1XGU1AHz9Fe8tmp2/giphy.gif",
+    "https://media.giphy.com/media/l2JhpjWPccQhsAMfu/giphy.gif",
   ]
 
   const copyMessages = [
@@ -150,6 +149,35 @@ export default function RingsideOracle() {
 
   const currentYear = new Date().getFullYear()
 
+  // Memoize wrestlers with brand names to prevent infinite re-renders
+  const wrestlersWithBrandNames = useMemo(() => {
+    if (!wrestlers || !brands) return []
+    return wrestlers.map((wrestler) => ({
+      ...wrestler,
+      brand_name: brands.find((b) => b._id === wrestler.brand_id)?.name || "Unknown",
+    }))
+  }, [wrestlers, brands])
+
+  // Memoize filtered wrestlers
+  const filteredWrestlers = useMemo(() => {
+    if (!wrestlersWithBrandNames.length) return []
+
+    let filtered = wrestlersWithBrandNames
+
+    if (selectedBrand !== "All") {
+      const brand = brands.find((b) => b.name === selectedBrand)
+      if (brand) {
+        filtered = filtered.filter((wrestler) => wrestler.brand_id === brand._id)
+      }
+    }
+
+    if (selectedStatus !== "All") {
+      filtered = filtered.filter((wrestler) => wrestler.status === selectedStatus)
+    }
+
+    return filtered
+  }, [wrestlersWithBrandNames, selectedBrand, selectedStatus, brands])
+
   // Reset data when promotion changes
   useEffect(() => {
     if (selectedPromotion) {
@@ -161,47 +189,45 @@ export default function RingsideOracle() {
       setEditingEventName(false)
       setMatches([])
     }
-  }, [selectedPromotion])
-
-  // Add brand names to wrestlers
-  useEffect(() => {
-    if (wrestlers && brands) {
-      const wrestlersWithBrandNames = wrestlers.map((wrestler) => ({
-        ...wrestler,
-        brand_name: brands.find((b) => b._id === wrestler.brand_id)?.name || "Unknown",
-      }))
-      setFilteredWrestlers(wrestlersWithBrandNames)
-    }
-  }, [wrestlers, brands])
-
-  // Filter wrestlers
-  useEffect(() => {
-    if (wrestlers && wrestlers.length > 0) {
-      let filtered = wrestlers.map((wrestler) => ({
-        ...wrestler,
-        brand_name: brands.find((b) => b._id === wrestler.brand_id)?.name || "Unknown",
-      }))
-
-      if (selectedBrand !== "All") {
-        const brand = brands.find((b) => b.name === selectedBrand)
-        if (brand) {
-          filtered = filtered.filter((wrestler) => wrestler.brand_id === brand._id)
-        }
-      }
-
-      if (selectedStatus !== "All") {
-        filtered = filtered.filter((wrestler) => wrestler.status === selectedStatus)
-      }
-
-      setFilteredWrestlers(filtered)
-    }
-  }, [wrestlers, selectedBrand, selectedStatus, brands])
+  }, [selectedPromotion]) // Only depend on the ID to prevent infinite loops
 
   // Update predictions when matches change
   useEffect(() => {
     const predictions = generatePredictions()
     setGeneratedPredictions(predictions)
-  }, [matches, eventName, customEventName, useCustomEvent])
+  }, [matches, eventName, customEventName, useCustomEvent, selectedPromotion?.name, matchTypes, championships])
+
+  const generatePredictions = () => {
+    const finalEventName = useCustomEvent ? customEventName : eventName
+    if (!finalEventName || matches.length === 0) return ""
+
+    let output = `My ${finalEventName} Predictions:\n\n`
+
+    matches.forEach((match, index) => {
+      if (match.winner) {
+        const matchTypeData = matchTypes.find((mt) => mt._id === match.matchTypeId)
+        const championship = championships.find((c) => c._id === match.championshipId)
+
+        let matchTypeDisplay = match.matchType
+        if (match.isChampionship && championship) {
+          matchTypeDisplay = championship.name
+        }
+
+        if (matchTypeData?.is_single_winner) {
+          output += `${index + 1}. ${match.winner} wins (${matchTypeDisplay})\n`
+        } else if (matchTypeData?.is_team_based) {
+          const winningTeam = match.team1?.includes(match.winner) ? "Team 1" : "Team 2"
+          output += `${index + 1}. ${winningTeam} wins - ${match.winner} gets the victory (${matchTypeDisplay})\n`
+        } else {
+          const opponent = match.winner === match.wrestler1 ? match.wrestler2 : match.wrestler1
+          output += `${index + 1}. ${match.winner} over ${opponent} (${matchTypeDisplay})\n`
+        }
+      }
+    })
+
+    output += `\nWhat do you think? #${selectedPromotion?.name} #Wrestling`
+    return output
+  }
 
   const addMatch = () => {
     const newMatch: Match = {
@@ -321,38 +347,6 @@ export default function RingsideOracle() {
     if (index === total - 1) return "Main Event"
     if (index === total - 2 && total > 2) return "Co-Main Event"
     return `Match ${index + 1}`
-  }
-
-  const generatePredictions = () => {
-    const finalEventName = useCustomEvent ? customEventName : eventName
-    if (!finalEventName || matches.length === 0) return ""
-
-    let output = `My ${finalEventName} Predictions:\n\n`
-
-    matches.forEach((match, index) => {
-      if (match.winner) {
-        const matchTypeData = matchTypes.find((mt) => mt._id === match.matchTypeId)
-        const championship = championships.find((c) => c._id === match.championshipId)
-
-        let matchTypeDisplay = match.matchType
-        if (match.isChampionship && championship) {
-          matchTypeDisplay = championship.name
-        }
-
-        if (matchTypeData?.is_single_winner) {
-          output += `${index + 1}. ${match.winner} wins (${matchTypeDisplay})\n`
-        } else if (matchTypeData?.is_team_based) {
-          const winningTeam = match.team1?.includes(match.winner) ? "Team 1" : "Team 2"
-          output += `${index + 1}. ${winningTeam} wins - ${match.winner} gets the victory (${matchTypeDisplay})\n`
-        } else {
-          const opponent = match.winner === match.wrestler1 ? match.wrestler2 : match.wrestler1
-          output += `${index + 1}. ${match.winner} over ${opponent} (${matchTypeDisplay})\n`
-        }
-      }
-    })
-
-    output += `\nWhat do you think? #${selectedPromotion?.name} #Wrestling`
-    return output
   }
 
   const copyToClipboard = () => {

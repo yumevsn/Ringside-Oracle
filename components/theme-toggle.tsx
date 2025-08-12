@@ -1,23 +1,25 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const [isDark, setIsDark] = useState(true)
   const [isShaking, setIsShaking] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
+    // Check for saved theme preference or default to dark
+    const savedTheme = localStorage.getItem("theme")
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+
+    if (savedTheme === "light" || (!savedTheme && !prefersDark)) {
+      setIsDark(false)
+      document.documentElement.classList.remove("dark")
+    } else {
+      setIsDark(true)
+      document.documentElement.classList.add("dark")
+    }
   }, [])
-
-  if (!mounted) {
-    return <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-800 animate-pulse" />
-  }
-
-  const isDark = theme === "dark"
 
   const toggleTheme = () => {
     // Trigger shake animation
@@ -26,7 +28,16 @@ export function ThemeToggle() {
 
     // Toggle theme after a short delay for effect
     setTimeout(() => {
-      setTheme(isDark ? "light" : "dark")
+      const newTheme = !isDark
+      setIsDark(newTheme)
+
+      if (newTheme) {
+        document.documentElement.classList.add("dark")
+        localStorage.setItem("theme", "dark")
+      } else {
+        document.documentElement.classList.remove("dark")
+        localStorage.setItem("theme", "light")
+      }
     }, 200)
   }
 

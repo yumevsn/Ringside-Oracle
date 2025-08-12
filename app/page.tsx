@@ -14,25 +14,27 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Confetti } from "@/components/confetti"
 import { AddDataModal } from "@/components/add-data-modal"
 import {
-  usePromotions,
-  useBrandsByPromotion,
-  useWrestlersByPromotion,
-  useEventsByPromotion,
-  useMatchTypesByPromotion,
-  useChampionshipsByPromotion,
+  fetchPromotions,
+  fetchBrandsByPromotion,
+  fetchWrestlersByPromotion,
+  fetchEventsByPromotion,
+  fetchMatchTypesByPromotion,
+  fetchChampionshipsByPromotion,
   type Promotion,
+  type Brand,
   type Wrestler,
+  type Event,
+  type MatchType,
+  type Championship,
 } from "@/lib/database"
 import { cn } from "@/lib/utils"
-import type { Id } from "@/convex/_generated/dataModel"
-import Image from "next/image"
 
 interface Match {
   id: string
   matchType: string
-  matchTypeId?: Id<"match_types">
+  matchTypeId?: number
   isChampionship: boolean
-  championshipId?: Id<"championships">
+  championshipId?: string
   winner: string | null
   participantCount?: number
   wrestler1?: string
@@ -43,17 +45,14 @@ interface Match {
 }
 
 export default function RingsideOracle() {
-  // Use Convex hooks for data fetching
-  const promotions = usePromotions()
+  const [promotions, setPromotions] = useState<Promotion[]>([])
   const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null)
+  const [brands, setBrands] = useState<Brand[]>([])
+  const [wrestlers, setWrestlers] = useState<Wrestler[]>([])
+  const [events, setEvents] = useState<Event[]>([])
+  const [matchTypes, setMatchTypes] = useState<MatchType[]>([])
+  const [championships, setChampionships] = useState<Championship[]>([])
 
-  const brands = useBrandsByPromotion(selectedPromotion?._id)
-  const wrestlers = useWrestlersByPromotion(selectedPromotion?._id)
-  const events = useEventsByPromotion(selectedPromotion?._id)
-  const matchTypes = useMatchTypesByPromotion(selectedPromotion?._id)
-  const championships = useChampionshipsByPromotion(selectedPromotion?._id)
-
-  // Rest of your component state remains the same...
   const [eventName, setEventName] = useState<string>("")
   const [customEventName, setCustomEventName] = useState<string>("")
   const [useCustomEvent, setUseCustomEvent] = useState<boolean>(false)
@@ -73,18 +72,18 @@ export default function RingsideOracle() {
   const [currentCopyMessage, setCopyMessage] = useState<string>("")
   const [confettiVisible, setConfettiVisible] = useState<boolean>(false)
 
-  // Pro wrestling GIFs (same as before)
+  // Pro wrestling GIFs
   const wrestlingGifs = [
-    "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif",
-    "https://media.giphy.com/media/xT1XGESDlxj0GwoDRe/giphy.gif",
-    "https://media.giphy.com/media/l2JhpjWPccQhsAMfu/giphy.gif",
-    "https://media.giphy.com/media/3o6Zt6KHxJTbXCnSvu/giphy.gif",
-    "https://media.giphy.com/media/xT1XGU1AHz9Fe8tmp2/giphy.gif",
-    "https://media.giphy.com/media/l0HlvtIPzPdt2usKs/giphy.gif",
-    "https://media.giphy.com/media/3o7TKF1fSIs1R19B8k/giphy.gif",
-    "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif",
-    "https://media.giphy.com/media/xT1XGU1AHz9Fe8tmp2/giphy.gif",
-    "https://media.giphy.com/media/l2JhpjWPccQhsAMfu/giphy.gif",
+    "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif", // Stone Cold Stunner
+    "https://media.giphy.com/media/xT1XGESDlxj0GwoDRe/giphy.gif", // Rock Bottom
+    "https://media.giphy.com/media/l2JhpjWPccQhsAMfu/giphy.gif", // Spear
+    "https://media.giphy.com/media/3o6Zt6KHxJTbXCnSvu/giphy.gif", // RKO
+    "https://media.giphy.com/media/xT1XGU1AHz9Fe8tmp2/giphy.gif", // Undertaker
+    "https://media.giphy.com/media/l0HlvtIPzPdt2usKs/giphy.gif", // John Cena
+    "https://media.giphy.com/media/3o7TKF1fSIs1R19B8k/giphy.gif", // Stone Cold Beer
+    "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif", // Attitude Adjustment
+    "https://media.giphy.com/media/xT1XGU1AHz9Fe8tmp2/giphy.gif", // Tombstone Piledriver
+    "https://media.giphy.com/media/l2JhpjWPccQhsAMfu/giphy.gif", // Goldberg Spear
   ]
 
   const copyMessages = [
@@ -102,15 +101,58 @@ export default function RingsideOracle() {
 
   const currentYear = new Date().getFullYear()
 
-  // Filter wrestlers when data changes
+  // Load initial data
   useEffect(() => {
-    if (wrestlers && brands) {
+    loadPromotions()
+  }, [])
+
+  const loadPromotions = async () => {
+    const promotionsData = await fetchPromotions()
+    setPromotions(promotionsData)
+  }
+
+  // Load promotion-specific data
+  useEffect(() => {
+    if (selectedPromotion) {
+      loadPromotionData()
+    }
+  }, [selectedPromotion])
+
+  const loadPromotionData = async () => {
+    if (!selectedPromotion) return
+
+    const [brandsData, wrestlersData, eventsData, matchTypesData, championshipsData] = await Promise.all([
+      fetchBrandsByPromotion(selectedPromotion.id),
+      fetchWrestlersByPromotion(selectedPromotion.id),
+      fetchEventsByPromotion(selectedPromotion.id),
+      fetchMatchTypesByPromotion(selectedPromotion.id),
+      fetchChampionshipsByPromotion(selectedPromotion.id),
+    ])
+
+    setBrands(brandsData)
+    setWrestlers(wrestlersData)
+    setEvents(eventsData)
+    setMatchTypes(matchTypesData)
+    setChampionships(championshipsData)
+    setFilteredWrestlers(wrestlersData)
+    setSelectedBrand("All")
+    setSelectedStatus("All")
+    setEventName("")
+    setCustomEventName("")
+    setUseCustomEvent(false)
+    setEditingEventName(false)
+    setMatches([])
+  }
+
+  // Filter wrestlers
+  useEffect(() => {
+    if (wrestlers.length > 0) {
       let filtered = wrestlers
 
       if (selectedBrand !== "All") {
         const brand = brands.find((b) => b.name === selectedBrand)
         if (brand) {
-          filtered = filtered.filter((wrestler) => wrestler.brand_id === brand._id)
+          filtered = filtered.filter((wrestler) => wrestler.brand_id === brand.id)
         }
       }
 
@@ -127,19 +169,6 @@ export default function RingsideOracle() {
     const predictions = generatePredictions()
     setGeneratedPredictions(predictions)
   }, [matches, eventName, customEventName, useCustomEvent])
-
-  // Reset state when promotion changes
-  useEffect(() => {
-    if (selectedPromotion) {
-      setSelectedBrand("All")
-      setSelectedStatus("All")
-      setEventName("")
-      setCustomEventName("")
-      setUseCustomEvent(false)
-      setEditingEventName(false)
-      setMatches([])
-    }
-  }, [selectedPromotion])
 
   const addMatch = () => {
     const newMatch: Match = {
@@ -167,9 +196,9 @@ export default function RingsideOracle() {
 
           // Auto-configure match based on type
           if (field === "matchType") {
-            const matchTypeData = matchTypes?.find((mt) => mt.name === value)
+            const matchTypeData = matchTypes.find((mt) => mt.name === value)
             if (matchTypeData) {
-              updatedMatch.matchTypeId = matchTypeData._id
+              updatedMatch.matchTypeId = matchTypeData.id
               updatedMatch.participantCount = matchTypeData.default_participants
 
               // Reset participants for new match type
@@ -269,8 +298,8 @@ export default function RingsideOracle() {
 
     matches.forEach((match, index) => {
       if (match.winner) {
-        const matchTypeData = matchTypes?.find((mt) => mt._id === match.matchTypeId)
-        const championship = championships?.find((c) => c._id === match.championshipId)
+        const matchTypeData = matchTypes.find((mt) => mt.id === match.matchTypeId)
+        const championship = championships.find((c) => c.id === Number.parseInt(match.championshipId || "0"))
 
         let matchTypeDisplay = match.matchType
         if (match.isChampionship && championship) {
@@ -310,7 +339,7 @@ export default function RingsideOracle() {
   const getFilteredWrestlersForChampionship = (championshipId: string | undefined) => {
     if (!championshipId) return filteredWrestlers
 
-    const championship = championships?.find((c) => c._id === championshipId)
+    const championship = championships.find((c) => c.id === Number.parseInt(championshipId))
     if (!championship) return filteredWrestlers
 
     // Filter by gender based on championship name
@@ -332,7 +361,7 @@ export default function RingsideOracle() {
   }
 
   const getAvailableWrestlersForMatch = (match: Match, currentIndex?: number) => {
-    const matchTypeData = matchTypes?.find((mt) => mt._id === match.matchTypeId)
+    const matchTypeData = matchTypes.find((mt) => mt.id === match.matchTypeId)
     let availableWrestlers = getFilteredWrestlersForMatch(match.matchType)
 
     // Filter by championship if it's a championship match
@@ -350,7 +379,7 @@ export default function RingsideOracle() {
   }
 
   const getFilteredWrestlersForMatch = (matchType: string) => {
-    const matchTypeData = matchTypes?.find((mt) => mt.name === matchType)
+    const matchTypeData = matchTypes.find((mt) => mt.name === matchType)
     if (!matchTypeData?.gender_filter) return filteredWrestlers
 
     return filteredWrestlers.filter((wrestler) => {
@@ -359,7 +388,7 @@ export default function RingsideOracle() {
   }
 
   const getMatchParticipants = (match: Match): string[] => {
-    const matchTypeData = matchTypes?.find((mt) => mt._id === match.matchTypeId)
+    const matchTypeData = matchTypes.find((mt) => mt.id === match.matchTypeId)
 
     if (matchTypeData?.is_single_winner && match.allParticipants) {
       return match.allParticipants.filter(Boolean)
@@ -399,7 +428,7 @@ export default function RingsideOracle() {
   }
 
   const renderMatchParticipants = (match: Match) => {
-    const matchTypeData = matchTypes?.find((mt) => mt._id === match.matchTypeId)
+    const matchTypeData = matchTypes.find((mt) => mt.id === match.matchTypeId)
     const availableForMatch = getFilteredWrestlersForMatch(match.matchType)
     const matchParticipants = getMatchParticipants(match)
 
@@ -423,21 +452,8 @@ export default function RingsideOracle() {
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border max-h-60">
                     {getAvailableWrestlersForMatch(match, index).map((wrestler) => (
-                      <SelectItem key={wrestler._id} value={wrestler.name} className="text-xs">
-                        <div className="flex items-center gap-2">
-                          {wrestler.image_url && (
-                            <Image
-                              src={wrestler.image_url || "/placeholder.svg"}
-                              alt={wrestler.name}
-                              width={20}
-                              height={20}
-                              className="rounded-full"
-                            />
-                          )}
-                          <span>
-                            {wrestler.name} ({wrestler.brand_name})
-                          </span>
-                        </div>
+                      <SelectItem key={wrestler.id} value={wrestler.name} className="text-xs">
+                        {wrestler.name} ({wrestler.brand_name})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -483,21 +499,8 @@ export default function RingsideOracle() {
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border max-h-60">
                       {availableForMatch.map((w) => (
-                        <SelectItem key={w._id} value={w.name} className="text-xs">
-                          <div className="flex items-center gap-2">
-                            {w.image_url && (
-                              <Image
-                                src={w.image_url || "/placeholder.svg"}
-                                alt={w.name}
-                                width={20}
-                                height={20}
-                                className="rounded-full"
-                              />
-                            )}
-                            <span>
-                              {w.name} ({w.brand_name})
-                            </span>
-                          </div>
+                        <SelectItem key={w.id} value={w.name} className="text-xs">
+                          {w.name} ({w.brand_name})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -519,21 +522,8 @@ export default function RingsideOracle() {
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border max-h-60">
                       {availableForMatch.map((w) => (
-                        <SelectItem key={w._id} value={w.name} className="text-xs">
-                          <div className="flex items-center gap-2">
-                            {w.image_url && (
-                              <Image
-                                src={w.image_url || "/placeholder.svg"}
-                                alt={w.name}
-                                width={20}
-                                height={20}
-                                className="rounded-full"
-                              />
-                            )}
-                            <span>
-                              {w.name} ({w.brand_name})
-                            </span>
-                          </div>
+                        <SelectItem key={w.id} value={w.name} className="text-xs">
+                          {w.name} ({w.brand_name})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -573,21 +563,8 @@ export default function RingsideOracle() {
               </SelectTrigger>
               <SelectContent className="bg-card border-border max-h-60">
                 {availableForMatch.map((wrestler) => (
-                  <SelectItem key={wrestler._id} value={wrestler.name} className="text-xs sm:text-sm">
-                    <div className="flex items-center gap-2">
-                      {wrestler.image_url && (
-                        <Image
-                          src={wrestler.image_url || "/placeholder.svg"}
-                          alt={wrestler.name}
-                          width={24}
-                          height={24}
-                          className="rounded-full"
-                        />
-                      )}
-                      <span>
-                        {wrestler.name} ({wrestler.brand_name})
-                      </span>
-                    </div>
+                  <SelectItem key={wrestler.id} value={wrestler.name} className="text-xs sm:text-sm">
+                    {wrestler.name} ({wrestler.brand_name})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -601,21 +578,8 @@ export default function RingsideOracle() {
               </SelectTrigger>
               <SelectContent className="bg-card border-border max-h-60">
                 {availableForMatch.map((wrestler) => (
-                  <SelectItem key={wrestler._id} value={wrestler.name} className="text-xs sm:text-sm">
-                    <div className="flex items-center gap-2">
-                      {wrestler.image_url && (
-                        <Image
-                          src={wrestler.image_url || "/placeholder.svg"}
-                          alt={wrestler.name}
-                          width={24}
-                          height={24}
-                          className="rounded-full"
-                        />
-                      )}
-                      <span>
-                        {wrestler.name} ({wrestler.brand_name})
-                      </span>
-                    </div>
+                  <SelectItem key={wrestler.id} value={wrestler.name} className="text-xs sm:text-sm">
+                    {wrestler.name} ({wrestler.brand_name})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -712,36 +676,23 @@ export default function RingsideOracle() {
                     promotions={promotions}
                     brands={brands}
                     selectedPromotion={selectedPromotion}
-                    onDataAdded={() => {}}
+                    onDataAdded={loadPromotions}
                   />
                 </div>
                 <Select
                   value={selectedPromotion?.name || ""}
                   onValueChange={(value) => {
-                    const promotion = promotions?.find((p) => p.name === value) || null
-                    setSelectedPromotion(promotion)
+                    const promotion = promotions.find((p) => p.name === value)
+                    setSelectedPromotion(promotion || null)
                   }}
                 >
                   <SelectTrigger className="bg-card border-border h-10 sm:h-11">
                     <SelectValue placeholder="Select promotion" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border max-h-60">
-                    {promotions?.map((promotion) => (
-                      <SelectItem key={promotion._id} value={promotion.name} className="text-sm sm:text-base">
-                        <div className="flex items-center gap-2">
-                          {promotion.logo_url ? (
-                            <Image
-                              src={promotion.logo_url || "/placeholder.svg"}
-                              alt={promotion.name}
-                              width={24}
-                              height={24}
-                              className="object-contain"
-                            />
-                          ) : (
-                            <span>{promotion.country_emoji}</span>
-                          )}
-                          <span>{promotion.name}</span>
-                        </div>
+                    {promotions.map((promotion) => (
+                      <SelectItem key={promotion.id} value={promotion.name} className="text-sm sm:text-base">
+                        {promotion.country_emoji} {promotion.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -777,7 +728,7 @@ export default function RingsideOracle() {
                           promotions={promotions}
                           brands={brands}
                           selectedPromotion={selectedPromotion}
-                          onDataAdded={() => {}}
+                          onDataAdded={loadPromotionData}
                         />
                       )}
                     </div>
@@ -786,31 +737,13 @@ export default function RingsideOracle() {
                         <SelectValue placeholder="Select event" />
                       </SelectTrigger>
                       <SelectContent className="bg-card border-border max-h-60">
-                        {events?.map((event) => (
+                        {events.map((event) => (
                           <SelectItem
-                            key={event._id}
+                            key={event.id}
                             value={`${event.name} ${currentYear}`}
                             className="text-sm sm:text-base"
                           >
-                            <div className="flex items-center gap-2">
-                              {event.logo_url && (
-                                <Image
-                                  src={event.logo_url || "/placeholder.svg"}
-                                  alt={event.name}
-                                  width={20}
-                                  height={20}
-                                  className="object-contain"
-                                />
-                              )}
-                              <span>
-                                {event.name} {currentYear}
-                              </span>
-                              {event.is_ppv && (
-                                <Badge variant="secondary" className="text-xs">
-                                  PPV
-                                </Badge>
-                              )}
-                            </div>
+                            {event.name} {currentYear}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -867,7 +800,7 @@ export default function RingsideOracle() {
                         promotions={promotions}
                         brands={brands}
                         selectedPromotion={selectedPromotion}
-                        onDataAdded={() => {}}
+                        onDataAdded={loadPromotionData}
                       />
                     </div>
                     <Select value={selectedBrand} onValueChange={setSelectedBrand}>
@@ -876,20 +809,9 @@ export default function RingsideOracle() {
                       </SelectTrigger>
                       <SelectContent className="bg-card border-border">
                         <SelectItem value="All">All Brands</SelectItem>
-                        {brands?.map((brand) => (
-                          <SelectItem key={brand._id} value={brand.name}>
-                            <div className="flex items-center gap-2">
-                              {brand.logo_url && (
-                                <Image
-                                  src={brand.logo_url || "/placeholder.svg"}
-                                  alt={brand.name}
-                                  width={16}
-                                  height={16}
-                                  className="object-contain"
-                                />
-                              )}
-                              <span>{brand.name}</span>
-                            </div>
+                        {brands.map((brand) => (
+                          <SelectItem key={brand.id} value={brand.name}>
+                            {brand.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -904,7 +826,7 @@ export default function RingsideOracle() {
                         promotions={promotions}
                         brands={brands}
                         selectedPromotion={selectedPromotion}
-                        onDataAdded={() => {}}
+                        onDataAdded={loadPromotionData}
                       />
                     </div>
                     <Select value={selectedStatus} onValueChange={setSelectedStatus}>
@@ -926,25 +848,16 @@ export default function RingsideOracle() {
                 {filteredWrestlers.length > 0 ? (
                   <div className="grid grid-cols-1 gap-1">
                     {filteredWrestlers.map((wrestler) => {
-                      const brand = brands?.find((b) => b._id === wrestler.brand_id)
+                      const brand = brands.find((b) => b.id === wrestler.brand_id)
                       return (
                         <Badge
-                          key={wrestler._id}
+                          key={wrestler.id}
                           variant="secondary"
                           className={cn(
-                            "text-xs justify-start p-1 sm:p-2 flex items-center gap-2",
+                            "text-xs justify-start p-1 sm:p-2",
                             brand?.color || "bg-secondary text-secondary-foreground",
                           )}
                         >
-                          {wrestler.image_url && (
-                            <Image
-                              src={wrestler.image_url || "/placeholder.svg"}
-                              alt={wrestler.name}
-                              width={20}
-                              height={20}
-                              className="rounded-full"
-                            />
-                          )}
                           <span className="truncate">{wrestler.name}</span>
                           <span className="ml-1 opacity-75">({wrestler.brand_name})</span>
                         </Badge>
@@ -1025,7 +938,7 @@ export default function RingsideOracle() {
                             promotions={promotions}
                             brands={brands}
                             selectedPromotion={selectedPromotion}
-                            onDataAdded={() => {}}
+                            onDataAdded={loadPromotionData}
                           />
                         </div>
                         <Select
@@ -1036,8 +949,8 @@ export default function RingsideOracle() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-card border-border max-h-60">
-                            {matchTypes?.map((type) => (
-                              <SelectItem key={type._id} value={type.name} className="text-xs sm:text-sm">
+                            {matchTypes.map((type) => (
+                              <SelectItem key={type.id} value={type.name} className="text-xs sm:text-sm">
                                 {type.name}
                               </SelectItem>
                             ))}
@@ -1066,7 +979,7 @@ export default function RingsideOracle() {
                             promotions={promotions}
                             brands={brands}
                             selectedPromotion={selectedPromotion}
-                            onDataAdded={() => {}}
+                            onDataAdded={loadPromotionData}
                           />
                         </div>
                         <Select
@@ -1077,20 +990,9 @@ export default function RingsideOracle() {
                             <SelectValue placeholder="Select championship" />
                           </SelectTrigger>
                           <SelectContent className="bg-card border-border max-h-60">
-                            {championships?.map((title) => (
-                              <SelectItem key={title._id} value={title._id} className="text-xs sm:text-sm">
-                                <div className="flex items-center gap-2">
-                                  {title.belt_image_url && (
-                                    <Image
-                                      src={title.belt_image_url || "/placeholder.svg"}
-                                      alt={title.name}
-                                      width={20}
-                                      height={20}
-                                      className="object-contain"
-                                    />
-                                  )}
-                                  <span>{title.name}</span>
-                                </div>
+                            {championships.map((title) => (
+                              <SelectItem key={title.id} value={title.id.toString()} className="text-xs sm:text-sm">
+                                {title.name}
                               </SelectItem>
                             ))}
                           </SelectContent>

@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,16 +11,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Checkbox } from "@/components/ui/checkbox"
 import { Plus } from "lucide-react"
 import {
-  useAddPromotion,
-  useAddEvent,
-  useAddWrestler,
-  useAddBrand,
-  useAddMatchType,
-  useAddChampionship,
+  addPromotion,
+  addEvent,
+  addWrestler,
+  addBrand,
+  addMatchType,
+  addChampionship,
   type Promotion,
   type Brand,
 } from "@/lib/database"
-import type { Id } from "@/convex/_generated/dataModel"
 
 interface AddDataModalProps {
   type: "promotion" | "event" | "wrestler" | "brand" | "matchType" | "championship"
@@ -33,14 +33,6 @@ export function AddDataModal({ type, promotions, brands, selectedPromotion, onDa
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<any>({})
-
-  // Convex mutation hooks
-  const addPromotion = useAddPromotion()
-  const addEvent = useAddEvent()
-  const addWrestler = useAddWrestler()
-  const addBrand = useAddBrand()
-  const addMatchType = useAddMatchType()
-  const addChampionship = useAddChampionship()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,7 +56,7 @@ export function AddDataModal({ type, promotions, brands, selectedPromotion, onDa
         case "event":
           if (!selectedPromotion) return
           result = await addEvent({
-            promotion_id: selectedPromotion._id,
+            promotion_id: selectedPromotion.id,
             name: formData.name,
             is_ppv: formData.is_ppv || false,
           })
@@ -74,7 +66,7 @@ export function AddDataModal({ type, promotions, brands, selectedPromotion, onDa
           if (!formData.brand_id) return
           result = await addWrestler({
             name: formData.name,
-            brand_id: formData.brand_id as Id<"brands">,
+            brand_id: Number.parseInt(formData.brand_id),
             status: formData.status || "Active",
             gender: formData.gender || "Male",
           })
@@ -83,7 +75,7 @@ export function AddDataModal({ type, promotions, brands, selectedPromotion, onDa
         case "brand":
           if (!selectedPromotion) return
           result = await addBrand({
-            promotion_id: selectedPromotion._id,
+            promotion_id: selectedPromotion.id,
             name: formData.name,
             color: formData.color || "bg-secondary text-secondary-foreground",
           })
@@ -92,21 +84,21 @@ export function AddDataModal({ type, promotions, brands, selectedPromotion, onDa
         case "matchType":
           if (!selectedPromotion) return
           result = await addMatchType({
-            promotion_id: selectedPromotion._id,
+            promotion_id: selectedPromotion.id,
             name: formData.name,
             default_participants: Number.parseInt(formData.default_participants) || 2,
             is_single_winner: formData.is_single_winner || false,
             is_team_based: formData.is_team_based || false,
-            teams_count: formData.teams_count ? Number.parseInt(formData.teams_count) : undefined,
-            players_per_team: formData.players_per_team ? Number.parseInt(formData.players_per_team) : undefined,
-            gender_filter: formData.gender_filter || undefined,
+            teams_count: formData.teams_count ? Number.parseInt(formData.teams_count) : null,
+            players_per_team: formData.players_per_team ? Number.parseInt(formData.players_per_team) : null,
+            gender_filter: formData.gender_filter || null,
           })
           break
 
         case "championship":
           if (!selectedPromotion) return
           result = await addChampionship({
-            promotion_id: selectedPromotion._id,
+            promotion_id: selectedPromotion.id,
             name: formData.name,
             is_active: true,
           })
@@ -125,7 +117,6 @@ export function AddDataModal({ type, promotions, brands, selectedPromotion, onDa
     }
   }
 
-  // Rest of the component remains the same...
   const getTitle = () => {
     switch (type) {
       case "promotion":
@@ -219,8 +210,8 @@ export function AddDataModal({ type, promotions, brands, selectedPromotion, onDa
                   <SelectValue placeholder="Select brand" />
                 </SelectTrigger>
                 <SelectContent>
-                  {brands?.map((brand) => (
-                    <SelectItem key={brand._id} value={brand._id}>
+                  {brands.map((brand) => (
+                    <SelectItem key={brand.id} value={brand.id.toString()}>
                       {brand.name}
                     </SelectItem>
                   ))}
@@ -340,7 +331,7 @@ export function AddDataModal({ type, promotions, brands, selectedPromotion, onDa
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 px-2 bg-transparent">
+        <Button variant="outline" size="sm" className="h-8 px-2">
           <Plus className="w-3 h-3 mr-1" />
           Add New
         </Button>

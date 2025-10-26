@@ -934,3 +934,410 @@ export const seedInitialData = mutation({
     }
   },
 })
+
+export const seedAdditionalData = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Check if we should add more data
+    const existingWrestlers = await ctx.db.query("wrestlers").collect()
+    console.log(`Current wrestler count: ${existingWrestlers.length}`)
+
+    // Get existing promotions to add more data to them
+    const wwe = await ctx.db
+      .query("promotions")
+      .filter((q) => q.eq(q.field("name"), "WWE"))
+      .first()
+    const aew = await ctx.db
+      .query("promotions")
+      .filter((q) => q.eq(q.field("name"), "AEW"))
+      .first()
+    const njpw = await ctx.db
+      .query("promotions")
+      .filter((q) => q.eq(q.field("name"), "NJPW"))
+      .first()
+    const tna = await ctx.db
+      .query("promotions")
+      .filter((q) => q.eq(q.field("name"), "TNA"))
+      .first()
+
+    if (!wwe || !aew || !njpw || !tna) {
+      return { message: "Please run the initial seed first" }
+    }
+
+    // Create additional promotions
+    const pwgId = await ctx.db.insert("promotions", {
+      name: "PWG",
+      country_code: "US",
+      country_emoji: "🇺🇸",
+      primary_color: "bg-gradient-to-r from-purple-600 to-pink-600",
+      secondary_color: "bg-purple-600/10 border-purple-500/20",
+      accent_color: "text-purple-400 border-pink-500/30",
+    })
+
+    const impactId = await ctx.db.insert("promotions", {
+      name: "IMPACT",
+      country_code: "US",
+      country_emoji: "🇺🇸",
+      primary_color: "bg-gradient-to-r from-orange-500 to-red-600",
+      secondary_color: "bg-orange-600/10 border-orange-500/20",
+      accent_color: "text-orange-400 border-red-500/30",
+    })
+
+    const dragonGateId = await ctx.db.insert("promotions", {
+      name: "Dragon Gate",
+      country_code: "JP",
+      country_emoji: "🇯🇵",
+      primary_color: "bg-gradient-to-r from-green-500 to-blue-600",
+      secondary_color: "bg-green-600/10 border-green-500/20",
+      accent_color: "text-green-400 border-blue-500/30",
+    })
+
+    const noahId = await ctx.db.insert("promotions", {
+      name: "NOAH",
+      country_code: "JP",
+      country_emoji: "🇯🇵",
+      primary_color: "bg-gradient-to-r from-indigo-600 to-purple-600",
+      secondary_color: "bg-indigo-600/10 border-indigo-500/20",
+      accent_color: "text-indigo-400 border-purple-500/30",
+    })
+
+    const revProId = await ctx.db.insert("promotions", {
+      name: "RevPro",
+      country_code: "GB",
+      country_emoji: "🇬🇧",
+      primary_color: "bg-gradient-to-r from-red-600 to-blue-600",
+      secondary_color: "bg-red-600/10 border-red-500/20",
+      accent_color: "text-red-400 border-blue-500/30",
+    })
+
+    // Create brands for new promotions
+    const pwgMainId = await ctx.db.insert("brands", {
+      promotion_id: pwgId,
+      name: "Main Roster",
+      color: "bg-purple-600/20 border-purple-500/30 text-purple-400",
+    })
+
+    const impactMainId = await ctx.db.insert("brands", {
+      promotion_id: impactId,
+      name: "Main Roster",
+      color: "bg-orange-600/20 border-orange-500/30 text-orange-400",
+    })
+
+    const dragonGateMainId = await ctx.db.insert("brands", {
+      promotion_id: dragonGateId,
+      name: "Main Roster",
+      color: "bg-green-600/20 border-green-500/30 text-green-400",
+    })
+
+    const noahMainId = await ctx.db.insert("brands", {
+      promotion_id: noahId,
+      name: "Main Roster",
+      color: "bg-indigo-600/20 border-indigo-500/30 text-indigo-400",
+    })
+
+    const revProMainId = await ctx.db.insert("brands", {
+      promotion_id: revProId,
+      name: "Main Roster",
+      color: "bg-red-600/20 border-red-500/30 text-red-400",
+    })
+
+    // Get existing WWE brands for additional wrestlers
+    const rawBrand = await ctx.db
+      .query("brands")
+      .filter((q) => q.eq(q.field("name"), "Raw"))
+      .first()
+    const smackdownBrand = await ctx.db
+      .query("brands")
+      .filter((q) => q.eq(q.field("name"), "SmackDown"))
+      .first()
+    const nxtBrand = await ctx.db
+      .query("brands")
+      .filter((q) => q.eq(q.field("name"), "NXT"))
+      .first()
+
+    // Get existing AEW brands
+    const dynamiteBrand = await ctx.db
+      .query("brands")
+      .filter((q) => q.eq(q.field("name"), "Dynamite"))
+      .first()
+    const rampageBrand = await ctx.db
+      .query("brands")
+      .filter((q) => q.eq(q.field("name"), "Rampage"))
+      .first()
+    const collisionBrand = await ctx.db
+      .query("brands")
+      .filter((q) => q.eq(q.field("name"), "Collision"))
+      .first()
+
+    // Additional WWE wrestlers (2025 signings and call-ups)
+    const additionalWWEWrestlers = [
+      // Raw additions
+      { name: "Bron Breakker", brand_id: rawBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Dragon Lee", brand_id: rawBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Ricochet", brand_id: rawBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Cedric Alexander", brand_id: rawBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Shelton Benjamin", brand_id: rawBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Candice LeRae", brand_id: rawBrand?._id, status: "Active" as const, gender: "Female" as const },
+      { name: "Indi Hartwell", brand_id: rawBrand?._id, status: "Active" as const, gender: "Female" as const },
+      { name: "Katana Chance", brand_id: rawBrand?._id, status: "Active" as const, gender: "Female" as const },
+      { name: "Kayden Carter", brand_id: rawBrand?._id, status: "Active" as const, gender: "Female" as const },
+
+      // SmackDown additions
+      { name: "Grayson Waller", brand_id: smackdownBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Austin Theory", brand_id: smackdownBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Bobby Lashley", brand_id: smackdownBrand?._id, status: "Active" as const, gender: "Male" as const },
+      {
+        name: "Street Profits Angelo",
+        brand_id: smackdownBrand?._id,
+        status: "Active" as const,
+        gender: "Male" as const,
+      },
+      {
+        name: "Street Profits Montez",
+        brand_id: smackdownBrand?._id,
+        status: "Active" as const,
+        gender: "Male" as const,
+      },
+      { name: "Dakota Kai", brand_id: smackdownBrand?._id, status: "Active" as const, gender: "Female" as const },
+      { name: "Raquel Rodriguez", brand_id: smackdownBrand?._id, status: "Active" as const, gender: "Female" as const },
+      { name: "Shotzi", brand_id: smackdownBrand?._id, status: "Active" as const, gender: "Female" as const },
+
+      // NXT additions
+      { name: "Dijak", brand_id: nxtBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Joe Gacy", brand_id: nxtBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Gigi Dolin", brand_id: nxtBrand?._id, status: "Active" as const, gender: "Female" as const },
+      { name: "Jacy Jayne", brand_id: nxtBrand?._id, status: "Active" as const, gender: "Female" as const },
+    ]
+
+    // Additional AEW wrestlers (2025 signings)
+    const additionalAEWWrestlers = [
+      // Dynamite additions
+      { name: "Pac", brand_id: dynamiteBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Malakai Black", brand_id: dynamiteBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Buddy Matthews", brand_id: dynamiteBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Brody King", brand_id: dynamiteBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Penta El Zero M", brand_id: dynamiteBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Rey Fenix", brand_id: dynamiteBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Andrade El Idolo", brand_id: dynamiteBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Miro", brand_id: dynamiteBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Saraya", brand_id: dynamiteBrand?._id, status: "Active" as const, gender: "Female" as const },
+      { name: "Taya Valkyrie", brand_id: dynamiteBrand?._id, status: "Active" as const, gender: "Female" as const },
+
+      // Collision additions
+      { name: "Tomohiro Ishii", brand_id: collisionBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Minoru Suzuki", brand_id: collisionBrand?._id, status: "Active" as const, gender: "Male" as const },
+
+      // Rampage additions
+      { name: "Hook", brand_id: rampageBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Action Andretti", brand_id: rampageBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "AR Fox", brand_id: rampageBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Top Flight Darius", brand_id: rampageBrand?._id, status: "Active" as const, gender: "Male" as const },
+      { name: "Top Flight Dante", brand_id: rampageBrand?._id, status: "Active" as const, gender: "Male" as const },
+    ]
+
+    // PWG wrestlers
+    const pwgWrestlers = [
+      { name: "Josh Bishop", brand_id: pwgMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Bandido", brand_id: pwgMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Speedball Mike Bailey", brand_id: pwgMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Jonathan Gresham", brand_id: pwgMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Rey Horus", brand_id: pwgMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Aramis", brand_id: pwgMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Black Taurus", brand_id: pwgMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Brody King", brand_id: pwgMainId, status: "Active" as const, gender: "Male" as const },
+    ]
+
+    // IMPACT wrestlers
+    const impactWrestlers = [
+      { name: "Alex Shelley", brand_id: impactMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Chris Sabin", brand_id: impactMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Frankie Kazarian", brand_id: impactMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Rich Swann", brand_id: impactMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Willie Mack", brand_id: impactMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Jordynne Grace", brand_id: impactMainId, status: "Active" as const, gender: "Female" as const },
+      { name: "Gisele Shaw", brand_id: impactMainId, status: "Active" as const, gender: "Female" as const },
+      { name: "Knockouts Champ", brand_id: impactMainId, status: "Active" as const, gender: "Female" as const },
+    ]
+
+    // Dragon Gate wrestlers
+    const dragonGateWrestlers = [
+      { name: "Masato Yoshino", brand_id: dragonGateMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Dragon Kid", brand_id: dragonGateMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Susumu Yokosuka", brand_id: dragonGateMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "BxB Hulk", brand_id: dragonGateMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Yamato", brand_id: dragonGateMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Kzy", brand_id: dragonGateMainId, status: "Active" as const, gender: "Male" as const },
+    ]
+
+    // NOAH wrestlers
+    const noahWrestlers = [
+      { name: "Kenoh", brand_id: noahMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Go Shiozaki", brand_id: noahMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Katsuhiko Nakajima", brand_id: noahMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Naomichi Marufuji", brand_id: noahMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Kaito Kiyomiya", brand_id: noahMainId, status: "Active" as const, gender: "Male" as const },
+    ]
+
+    // RevPro wrestlers
+    const revProWrestlers = [
+      { name: "Will Ospreay", brand_id: revProMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Zack Sabre Jr", brand_id: revProMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Michael Oku", brand_id: revProMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Gideon Grey", brand_id: revProMainId, status: "Active" as const, gender: "Male" as const },
+      { name: "Connor Mills", brand_id: revProMainId, status: "Active" as const, gender: "Male" as const },
+    ]
+
+    // Insert all additional wrestlers
+    const allAdditionalWrestlers = [
+      ...additionalWWEWrestlers,
+      ...additionalAEWWrestlers,
+      ...pwgWrestlers,
+      ...impactWrestlers,
+      ...dragonGateWrestlers,
+      ...noahWrestlers,
+      ...revProWrestlers,
+    ]
+
+    for (const wrestler of allAdditionalWrestlers) {
+      if (wrestler.brand_id) {
+        await ctx.db.insert("wrestlers", wrestler)
+      }
+    }
+
+    // Add more events for new promotions
+    const additionalEvents = [
+      // PWG Events
+      { promotion_id: pwgId, name: "Battle of Los Angeles", is_ppv: true },
+      { promotion_id: pwgId, name: "All Star Weekend", is_ppv: true },
+      { promotion_id: pwgId, name: "Mystery Vortex", is_ppv: true },
+
+      // IMPACT Events
+      { promotion_id: impactId, name: "Bound for Glory", is_ppv: true },
+      { promotion_id: impactId, name: "Slammiversary", is_ppv: true },
+      { promotion_id: impactId, name: "Hard to Kill", is_ppv: true },
+      { promotion_id: impactId, name: "Rebellion", is_ppv: true },
+
+      // Dragon Gate Events
+      { promotion_id: dragonGateId, name: "King of Gate", is_ppv: true },
+      { promotion_id: dragonGateId, name: "Dead or Alive", is_ppv: true },
+      { promotion_id: dragonGateId, name: "Final Gate", is_ppv: true },
+
+      // NOAH Events
+      { promotion_id: noahId, name: "Departure", is_ppv: true },
+      { promotion_id: noahId, name: "Destiny", is_ppv: true },
+      { promotion_id: noahId, name: "Navigation", is_ppv: true },
+
+      // RevPro Events
+      { promotion_id: revProId, name: "Summer Sizzler", is_ppv: true },
+      { promotion_id: revProId, name: "Epic Encounter", is_ppv: true },
+      { promotion_id: revProId, name: "High Stakes", is_ppv: true },
+    ]
+
+    for (const event of additionalEvents) {
+      await ctx.db.insert("events", event)
+    }
+
+    // Add more match types for new promotions
+    const additionalMatchTypes = [
+      // PWG Match Types
+      {
+        promotion_id: pwgId,
+        name: "Guerrilla Warfare",
+        default_participants: 2,
+        is_single_winner: false,
+        is_team_based: false,
+      },
+      {
+        promotion_id: pwgId,
+        name: "Battle of Los Angeles Tournament",
+        default_participants: 16,
+        is_single_winner: true,
+        is_team_based: false,
+      },
+
+      // IMPACT Match Types
+      {
+        promotion_id: impactId,
+        name: "Ultimate X",
+        default_participants: 6,
+        is_single_winner: true,
+        is_team_based: false,
+      },
+      {
+        promotion_id: impactId,
+        name: "Full Metal Mayhem",
+        default_participants: 2,
+        is_single_winner: false,
+        is_team_based: false,
+      },
+
+      // Dragon Gate Match Types
+      {
+        promotion_id: dragonGateId,
+        name: "Elimination Match",
+        default_participants: 6,
+        is_single_winner: true,
+        is_team_based: false,
+      },
+
+      // NOAH Match Types
+      {
+        promotion_id: noahId,
+        name: "GHC Championship Match",
+        default_participants: 2,
+        is_single_winner: false,
+        is_team_based: false,
+      },
+
+      // RevPro Match Types
+      {
+        promotion_id: revProId,
+        name: "British Strong Style Match",
+        default_participants: 2,
+        is_single_winner: false,
+        is_team_based: false,
+      },
+    ]
+
+    for (const matchType of additionalMatchTypes) {
+      await ctx.db.insert("match_types", matchType)
+    }
+
+    // Add more championships
+    const additionalChampionships = [
+      // PWG Championships
+      { promotion_id: pwgId, name: "PWG World Championship", is_active: true },
+      { promotion_id: pwgId, name: "PWG World Tag Team Championship", is_active: true },
+
+      // IMPACT Championships
+      { promotion_id: impactId, name: "IMPACT World Championship", is_active: true },
+      { promotion_id: impactId, name: "IMPACT Knockouts Championship", is_active: true },
+      { promotion_id: impactId, name: "IMPACT X-Division Championship", is_active: true },
+
+      // Dragon Gate Championships
+      { promotion_id: dragonGateId, name: "Open the Dream Gate Championship", is_active: true },
+      { promotion_id: dragonGateId, name: "Open the Twin Gate Championship", is_active: true },
+
+      // NOAH Championships
+      { promotion_id: noahId, name: "GHC Heavyweight Championship", is_active: true },
+      { promotion_id: noahId, name: "GHC Tag Team Championship", is_active: true },
+
+      // RevPro Championships
+      { promotion_id: revProId, name: "RevPro British Heavyweight Championship", is_active: true },
+      { promotion_id: revProId, name: "RevPro Undisputed British Tag Team Championship", is_active: true },
+    ]
+
+    for (const championship of additionalChampionships) {
+      await ctx.db.insert("championships", championship)
+    }
+
+    const finalWrestlerCount = await ctx.db.query("wrestlers").collect()
+
+    return {
+      message: `Additional wrestling data seeded successfully! Added ${finalWrestlerCount.length - existingWrestlers.length} new wrestlers across 5 new promotions (PWG, IMPACT, Dragon Gate, NOAH, RevPro) plus additional WWE/AEW talent. Total wrestlers: ${finalWrestlerCount.length}`,
+      newPromotions: ["PWG", "IMPACT", "Dragon Gate", "NOAH", "RevPro"],
+      additionalWrestlers: finalWrestlerCount.length - existingWrestlers.length,
+      totalWrestlers: finalWrestlerCount.length,
+    }
+  },
+})

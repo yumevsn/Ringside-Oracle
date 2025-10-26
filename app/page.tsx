@@ -139,6 +139,24 @@ export default function RingsideOracle() {
     }
   }
 
+  // Seed additional data mutation
+  const seedAdditionalData = useMutation(api.seedData.seedAdditionalData)
+
+  // Handle additional seeding
+  const handleSeedAdditionalData = async () => {
+    setIsSeeding(true)
+    try {
+      const result = await seedAdditionalData({})
+      console.log("Additional seed result:", result)
+      alert(`Additional data seeded successfully! 🚀\n\n${result.message}`)
+    } catch (error) {
+      console.error("Error seeding additional data:", error)
+      alert("Error seeding additional data. Check console for details.")
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
   // Pro wrestling GIFs
   const wrestlingGifs = [
     "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif",
@@ -718,8 +736,8 @@ export default function RingsideOracle() {
           </div>
         </div>
 
-        {/* Show seed button if no promotions exist */}
-        {promotions.length === 0 && (
+        {/* Show seed buttons */}
+        {promotions.length === 0 ? (
           <div className="text-center mb-8">
             <Card className="max-w-md mx-auto">
               <CardHeader>
@@ -733,6 +751,29 @@ export default function RingsideOracle() {
                 <Button onClick={handleSeedData} disabled={isSeeding} className="w-full">
                   <Database className="w-4 h-4 mr-2" />
                   {isSeeding ? "Seeding Database..." : "Seed Wrestling Database 🎯"}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="text-center mb-8">
+            <Card className="max-w-md mx-auto">
+              <CardHeader>
+                <CardTitle>Add More Data</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Want even more wrestling data? Add PWG, IMPACT, Dragon Gate, NOAH, RevPro plus additional WWE/AEW
+                  wrestlers!
+                </p>
+                <Button
+                  onClick={handleSeedAdditionalData}
+                  disabled={isSeeding}
+                  className="w-full bg-transparent"
+                  variant="outline"
+                >
+                  <Database className="w-4 h-4 mr-2" />
+                  {isSeeding ? "Adding Data..." : "Add More Wrestling Data 🚀"}
                 </Button>
               </CardContent>
             </Card>

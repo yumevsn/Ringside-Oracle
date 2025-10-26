@@ -15,6 +15,70 @@ function parseCSV(csv: string) {
   })
 }
 
+// Clear all data from the database
+export const clearAllData = mutation({
+  args: {},
+  handler: async (ctx) => {
+    console.log("Clearing all data from database...")
+
+    // Delete in reverse order of dependencies
+    const wrestlers = await ctx.db.query("wrestlers").collect()
+    for (const wrestler of wrestlers) {
+      await ctx.db.delete(wrestler._id)
+    }
+
+    const championships = await ctx.db.query("championships").collect()
+    for (const championship of championships) {
+      await ctx.db.delete(championship._id)
+    }
+
+    const matchTypes = await ctx.db.query("match_types").collect()
+    for (const matchType of matchTypes) {
+      await ctx.db.delete(matchType._id)
+    }
+
+    const events = await ctx.db.query("events").collect()
+    for (const event of events) {
+      await ctx.db.delete(event._id)
+    }
+
+    const brands = await ctx.db.query("brands").collect()
+    for (const brand of brands) {
+      await ctx.db.delete(brand._id)
+    }
+
+    const promotions = await ctx.db.query("promotions").collect()
+    for (const promotion of promotions) {
+      await ctx.db.delete(promotion._id)
+    }
+
+    console.log("All data cleared successfully!")
+    return {
+      message: "Database cleared",
+      deleted: {
+        wrestlers: wrestlers.length,
+        championships: championships.length,
+        matchTypes: matchTypes.length,
+        events: events.length,
+        brands: brands.length,
+        promotions: promotions.length,
+      },
+    }
+  },
+})
+
+// Clear and reseed in one function
+export const clearAndReseed = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // First clear all data
+    await ctx.runMutation("clearAllData", {})
+
+    // Then seed from CSV
+    return await ctx.runMutation("seedInitialData", {})
+  },
+})
+
 export const seedInitialData = mutation({
   args: {},
   handler: async (ctx) => {
@@ -22,7 +86,7 @@ export const seedInitialData = mutation({
     const existingPromotions = await ctx.db.query("promotions").collect()
     if (existingPromotions.length > 0) {
       return {
-        message: "Data already exists, skipping seed",
+        message: "Data already exists, skipping seed. Use clearAndReseed to force reseed.",
         promotions: existingPromotions.length,
       }
     }
@@ -193,5 +257,3 @@ export const seedInitialData = mutation({
     }
   },
 })
-
-// Remove the old seedAdditionalData function entirely

@@ -9,11 +9,11 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Trash2, Plus, Copy, Filter, ChevronUp, ChevronDown, Edit3, Info, Database } from "lucide-react"
+import { Trash2, Plus, Copy, Filter, ChevronUp, ChevronDown, Edit3, Info } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Confetti } from "@/components/confetti"
 import { AddDataModal } from "@/components/add-data-modal"
-import { useQuery, useMutation } from "convex/react"
+import { useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { cn } from "@/lib/utils"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -97,7 +97,6 @@ export default function RingsideOracle() {
   const [selectedStatus, setSelectedStatus] = useState<string>("All")
   const [generatedPredictions, setGeneratedPredictions] = useState<string>("")
   const [editingPredictions, setEditingPredictions] = useState<boolean>(false)
-  const [isSeeding, setIsSeeding] = useState<boolean>(false)
 
   const [showConfetti, setShowConfetti] = useState<boolean>(true)
   const [showCopyPopup, setShowCopyPopup] = useState<boolean>(false)
@@ -107,7 +106,7 @@ export default function RingsideOracle() {
   const [currentCopyMessage, setCopyMessage] = useState<string>("")
   const [confettiVisible, setConfettiVisible] = useState<boolean>(false)
 
-  // Convex queries and mutations
+  // Convex queries
   const promotions = useQuery(api.promotions.list) || []
   const brands =
     useQuery(api.brands.listByPromotion, selectedPromotion ? { promotionId: selectedPromotion._id } : "skip") || []
@@ -120,42 +119,6 @@ export default function RingsideOracle() {
   const championships =
     useQuery(api.championships.listByPromotion, selectedPromotion ? { promotionId: selectedPromotion._id } : "skip") ||
     []
-
-  // Seed data mutation
-  const seedData = useMutation(api.seedData.seedInitialData)
-
-  // Handle seeding
-  const handleSeedData = async () => {
-    setIsSeeding(true)
-    try {
-      const result = await seedData({})
-      console.log("Seed result:", result)
-      alert("Database seeded successfully! 🎉")
-    } catch (error) {
-      console.error("Error seeding data:", error)
-      alert("Error seeding data. Check console for details.")
-    } finally {
-      setIsSeeding(false)
-    }
-  }
-
-  // Seed additional data mutation
-  const seedAdditionalData = useMutation(api.seedData.seedAdditionalData)
-
-  // Handle additional seeding
-  const handleSeedAdditionalData = async () => {
-    setIsSeeding(true)
-    try {
-      const result = await seedAdditionalData({})
-      console.log("Additional seed result:", result)
-      alert(`Additional data seeded successfully! 🚀\n\n${result.message}`)
-    } catch (error) {
-      console.error("Error seeding additional data:", error)
-      alert("Error seeding additional data. Check console for details.")
-    } finally {
-      setIsSeeding(false)
-    }
-  }
 
   // Pro wrestling GIFs
   const wrestlingGifs = [
@@ -226,7 +189,7 @@ export default function RingsideOracle() {
       setEditingEventName(false)
       setMatches([])
     }
-  }, [selectedPromotion]) // Only depend on the ID to prevent infinite loops
+  }, [selectedPromotion])
 
   // Update predictions when matches change
   useEffect(() => {
@@ -697,6 +660,31 @@ export default function RingsideOracle() {
     )
   }
 
+  // Show message if no data exists
+  if (promotions.length === 0) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Database Not Seeded</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              The database needs to be seeded with wrestling data. Please run the seed function from the Convex
+              dashboard or CLI.
+            </p>
+            <div className="bg-muted p-3 rounded-md text-sm font-mono mb-4">
+              npx convex run seedData:seedInitialData
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Or go to your Convex dashboard → Functions → Run function → seedData:seedInitialData
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <Confetti
@@ -735,50 +723,6 @@ export default function RingsideOracle() {
             <span>Help grow our database by adding new promotions, wrestlers, events, and more!</span>
           </div>
         </div>
-
-        {/* Show seed buttons */}
-        {promotions.length === 0 ? (
-          <div className="text-center mb-8">
-            <Card className="max-w-md mx-auto">
-              <CardHeader>
-                <CardTitle>No Data Found</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  No promotions found in the database. Click below to seed the database with comprehensive 2025
-                  wrestling data including WWE, AEW, NJPW, TNA, STARDOM, and GCW!
-                </p>
-                <Button onClick={handleSeedData} disabled={isSeeding} className="w-full">
-                  <Database className="w-4 h-4 mr-2" />
-                  {isSeeding ? "Seeding Database..." : "Seed Wrestling Database 🎯"}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          <div className="text-center mb-8">
-            <Card className="max-w-md mx-auto">
-              <CardHeader>
-                <CardTitle>Add More Data</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Want even more wrestling data? Add PWG, IMPACT, Dragon Gate, NOAH, RevPro plus additional WWE/AEW
-                  wrestlers!
-                </p>
-                <Button
-                  onClick={handleSeedAdditionalData}
-                  disabled={isSeeding}
-                  className="w-full bg-transparent"
-                  variant="outline"
-                >
-                  <Database className="w-4 h-4 mr-2" />
-                  {isSeeding ? "Adding Data..." : "Add More Wrestling Data 🚀"}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-2 mb-6 sm:mb-8">
           <Card className={cn("bg-card border-border")}>

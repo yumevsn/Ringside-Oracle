@@ -189,7 +189,7 @@ export default function RingsideOracle() {
       setEditingEventName(false)
       setMatches([])
     }
-  }, [selectedPromotion])
+  }, [selectedPromotion]) // Only depend on the ID to prevent infinite loops
 
   // Update predictions when matches change
   useEffect(() => {
@@ -660,31 +660,6 @@ export default function RingsideOracle() {
     )
   }
 
-  // Show message if no data exists
-  if (promotions.length === 0) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>Database Not Seeded</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              The database needs to be seeded with wrestling data. Please run the seed function from the Convex
-              dashboard or CLI.
-            </p>
-            <div className="bg-muted p-3 rounded-md text-sm font-mono mb-4">
-              npx convex run seedData:seedInitialData
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Or go to your Convex dashboard → Functions → Run function → seedData:seedInitialData
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <Confetti
@@ -723,6 +698,31 @@ export default function RingsideOracle() {
             <span>Help grow our database by adding new promotions, wrestlers, events, and more!</span>
           </div>
         </div>
+
+        {/* Show message if no promotions exist */}
+        {promotions.length === 0 && (
+          <div className="text-center mb-8">
+            <Card className="max-w-md mx-auto">
+              <CardHeader>
+                <CardTitle>No Data Found</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  No promotions found in the database. You can add some sample data or import your existing data.
+                </p>
+                <Button
+                  onClick={() => {
+                    // This would trigger seeding - you can implement this later
+                    console.log("Seed data functionality would go here")
+                  }}
+                  className="w-full"
+                >
+                  Add Sample Data
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-2 mb-6 sm:mb-8">
           <Card className={cn("bg-card border-border")}>

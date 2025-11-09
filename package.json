@@ -9,8 +9,6 @@
     "start": "next start"
   },
   "dependencies": {
-    "@auth0/auth0-react": "latest",
-    "@clerk/clerk-react": "latest",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",
@@ -44,7 +42,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "latest",
-    "convex": "latest",
     "date-fns": "4.1.0",
     "embla-carousel-react": "latest",
     "input-otp": "latest",
